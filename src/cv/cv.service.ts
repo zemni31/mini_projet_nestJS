@@ -12,6 +12,7 @@ import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { CvEntity } from './entities/cv.entity';
 import { CV_ERRORS } from './errors/cv.errors'; // ← NOUVEAU
+import { ADMIN_ROLE } from '../common/common.constants';
 
 @Injectable()
 export class CvService extends CrudService<CvEntity> {
@@ -65,7 +66,16 @@ export class CvService extends CrudService<CvEntity> {
     const skills = await this.loadSkills(skillIds ?? []);
     return this.create({ ...data, skills, user: { id: user.userId } });
   }
-
+  // Exercice 14 : l'admin voit tous les Cvs, un utilisateur seulement les siens
+  findAllForUser(user: ConnectedUser): Promise<CvEntity[]> {
+    if (user.role === ADMIN_ROLE) {
+      return this.findAll();
+    }
+    return this.repository.find({
+      where: { user: { id: user.userId } },
+      relations: { skills: true },
+    });
+  }
   // ← MODIFIÉ : vérifie le propriétaire avant de modifier
   async updateCv(
     id: number,

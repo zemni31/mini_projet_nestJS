@@ -26,9 +26,10 @@ export class CvController {
     return this.cvService.createCv(dto, user);
   }
 
-  @Get()
-  findAll() {
-    return this.cvService.findAll();
+   @Get()
+  @UseGuards(FakeAuthGuard)
+  findAll(@CurrentUser() user: ConnectedUser) {
+    return this.cvService.findAllForUser(user);
   }
 
   @Get(':id')
