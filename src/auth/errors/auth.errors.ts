@@ -7,4 +7,5 @@ export const AUTH_ERRORS = {
   EMAIL_REQUIRED: 'L\'email est obligatoire.',
   EMAIL_INVALID: 'L\'email n\'est pas valide.',
   USER_ALREADY_EXISTS: 'Nom d\'utilisateur ou email déjà utilisé.',
+  INVALID_CREDENTIALS: 'Identifiants invalides',
 } as const;
