@@ -8,6 +8,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TodoModule } from './todo/todo.module';
 import { SkillModule } from './skill/skill.module';
 import { CvModule } from './cv/cv.module';
+import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [CommonModule, TestModule,
     ConfigModule.forRoot({ isGlobal: true }),
@@ -32,6 +34,7 @@ import { CvModule } from './cv/cv.module';
     TodoModule,
     SkillModule,
     CvModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
