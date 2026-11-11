@@ -1,0 +1,1026 @@
+{
+  "info": {
+    "name": "TP2 NestJS - Cvs, Skills, Auth",
+    "description": "Lot 5 : jeu de tests de toutes les routes. Lancer `npm run seed:cvs` puis `npm run start:dev` avant d'exécuter la collection (les skills 1, 2, 3 du seed sont utilisées).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1 - Auth (inscription)",
+      "item": [
+        {
+          "name": "Inscription OK",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/inscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "inscription"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{username}}@test.tn\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// username unique à chaque exécution (max 20 caractères)",
+                  "pm.collectionVariables.set(\"username\", \"test\" + Date.now().toString().slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inscription : statut 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Le username renvoyé est celui envoyé\", () => pm.expect(body.username).to.eql(pm.collectionVariables.get(\"username\")));",
+                  "pm.test(\"Le mot de passe n'est jamais renvoyé\", () => pm.expect(body).to.not.have.property(\"password\"));",
+                  "pm.test(\"Le rôle par défaut est user\", () => pm.expect(body.role).to.eql(\"user\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscription username déjà pris (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/inscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "inscription"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"autre{{username}}@test.tn\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Doublon refusé : statut 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscription mot de passe trop court (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/inscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "inscription"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"petitmdp\",\n  \"email\": \"petitmdp@test.tn\",\n  \"password\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Validation DTO : statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscription email invalide (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/inscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "inscription"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"mauvaismail\",\n  \"email\": \"pas-un-email\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Validation DTO : statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscription avec role admin ignoré (whitelist)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/inscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "inscription"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}x\",\n  \"email\": \"{{username}}x@test.tn\",\n  \"password\": \"Password123!\",\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inscription : statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Le champ role est retiré par whitelist : rôle = user\", () => pm.expect(pm.response.json().role).to.eql(\"user\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 - Skills (CRUD)",
+      "item": [
+        {
+          "name": "Créer une skill",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Skill Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Création : statut 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"La skill a un id\", () => pm.expect(body.id).to.be.a(\"number\"));",
+                  "pm.collectionVariables.set(\"skillId\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer une skill sans désignation (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Validation DTO : statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lister les skills",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"pm.test(\\\"La réponse est un tableau non vide (seed)\\\", () => pm.expect(pm.response.json()).to.be.an(\\\"array\\\").that.is.not.empty);\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Voir une skill",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Détail : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"pm.test(\\\"Bon id\\\", () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get(\\\"skillId\\\")));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Voir une skill inexistante (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "999999"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Introuvable : statut 404\\\", () => pm.response.to.have.status(404));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier une skill",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Skill modifiée\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Modification : statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Désignation modifiée\", () => pm.expect(pm.response.json().designation).to.eql(\"Skill modifiée\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Suppression logique (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}/soft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}",
+                "soft"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Suppression : statut 200 ou 204\", () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restaurer la skill",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}",
+                "restore"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Restauration : statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer définitivement",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Suppression : statut 200 ou 204\", () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Voir la skill supprimée (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/skills/{{skillId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "skills",
+                "{{skillId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Supprimée : statut 404\\\", () => pm.response.to.have.status(404));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Cvs (CRUD)",
+      "item": [
+        {
+          "name": "Créer un cv avec 2 skills",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dupont\",\n  \"firstname\": \"Sami\",\n  \"age\": 25,\n  \"cin\": \"01234567\",\n  \"job\": \"Développeur\",\n  \"path\": \"cvs/sami.pdf\",\n  \"skillIds\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Création : statut 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Le CIN garde son 0 initial\", () => pm.expect(body.cin).to.eql(\"01234567\"));",
+                  "pm.test(\"Le cv a ses 2 skills (relation N-N)\", () => pm.expect(body.skills).to.have.lengthOf(2));",
+                  "pm.collectionVariables.set(\"cvId\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer un cv avec CIN invalide (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dupont\",\n  \"firstname\": \"Sami\",\n  \"age\": 25,\n  \"cin\": \"123\",\n  \"job\": \"Développeur\",\n  \"path\": \"cvs/sami.pdf\",\n  \"skillIds\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CIN de 8 chiffres : statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer un cv avec âge négatif (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dupont\",\n  \"firstname\": \"Sami\",\n  \"age\": -5,\n  \"cin\": \"01234567\",\n  \"job\": \"Développeur\",\n  \"path\": \"cvs/sami.pdf\",\n  \"skillIds\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Âge entre 1 et 120 : statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer un cv avec skill inexistante (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dupont\",\n  \"firstname\": \"Sami\",\n  \"age\": 25,\n  \"cin\": \"01234567\",\n  \"job\": \"Développeur\",\n  \"path\": \"cvs/sami.pdf\",\n  \"skillIds\": [\n    999999\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Skill introuvable : statut 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lister les cvs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"pm.test(\\\"La réponse est un tableau non vide (seed)\\\", () => pm.expect(pm.response.json()).to.be.an(\\\"array\\\").that.is.not.empty);\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Voir un cv",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{cvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{cvId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Détail : statut 200\\\", () => pm.response.to.have.status(200));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Voir un cv inexistant (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "999999"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Introuvable : statut 404\\\", () => pm.response.to.have.status(404));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier un cv (job + skills)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{cvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{cvId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"job\": \"Architecte logiciel\",\n  \"skillIds\": [\n    3\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Modification : statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Job modifié\", () => pm.expect(body.job).to.eql(\"Architecte logiciel\"));",
+                  "pm.test(\"Skills remplacées par [3]\", () => pm.expect(body.skills.map(s => s.id)).to.eql([3]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Suppression logique (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{cvId}}/soft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{cvId}}",
+                "soft"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Suppression : statut 200 ou 204\", () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restaurer le cv",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{cvId}}/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{cvId}}",
+                "restore"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Restauration : statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer définitivement",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{cvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{cvId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Suppression : statut 200 ou 204\", () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Voir le cv supprimé (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{cvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{cvId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Supprimé : statut 404\\\", () => pm.response.to.have.status(404));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "skillId",
+      "value": ""
+    },
+    {
+      "key": "cvId",
+      "value": ""
+    }
+  ]
+}
