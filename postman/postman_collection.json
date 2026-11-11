@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "TP2 NestJS - Cvs, Skills, Auth",
-    "description": "Lot 5 : jeu de tests de toutes les routes. Lancer `npm run seed:cvs` puis `npm run start:dev` avant d'exécuter la collection (les skills 1, 2, 3 du seed sont utilisées).",
+    "description": "Lot 5 : jeu de tests de toutes les routes. Lancer `npm run seed:cvs` puis `npm run start:dev` avant d'exécuter la collection (skills 1, 2, 3 et users 1 = admin, 2, 3 du seed). En attendant le lot 4, l'authentification est simulée par le FakeAuthGuard : header x-user-id (et x-user-role: admin pour l'admin).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -578,13 +578,17 @@
       ]
     },
     {
-      "name": "3 - Cvs (CRUD)",
+      "name": "3 - Cvs (CRUD, en tant que propriétaire)",
       "item": [
         {
           "name": "Créer un cv avec 2 skills",
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -631,6 +635,10 @@
             "method": "POST",
             "header": [
               {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
@@ -671,6 +679,10 @@
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -713,6 +725,10 @@
             "method": "POST",
             "header": [
               {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
@@ -749,10 +765,14 @@
           ]
         },
         {
-          "name": "Lister les cvs",
+          "name": "Lister mes cvs",
           "request": {
             "method": "GET",
             "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -769,7 +789,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"pm.test(\\\"La réponse est un tableau non vide (seed)\\\", () => pm.expect(pm.response.json()).to.be.an(\\\"array\\\").that.is.not.empty);\"\n]",
+              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"pm.test(\\\"La réponse est un tableau non vide\\\", () => pm.expect(pm.response.json()).to.be.an(\\\"array\\\").that.is.not.empty);\"\n]",
               "options": {
                 "raw": {
                   "language": "json"
@@ -841,10 +861,45 @@
           }
         },
         {
+          "name": "Voir un cv avec id non numérique (400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "abc"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"ParseIntPipe : statut 400\\\", () => pm.response.to.have.status(400));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "Modifier un cv (job + skills)",
           "request": {
             "method": "PATCH",
             "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -889,7 +944,12 @@
           "name": "Suppression logique (soft delete)",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/cvs/{{cvId}}/soft",
               "host": [
@@ -918,7 +978,12 @@
           "name": "Restaurer le cv",
           "request": {
             "method": "PATCH",
-            "header": [],
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/cvs/{{cvId}}/restore",
               "host": [
@@ -947,7 +1012,12 @@
           "name": "Supprimer définitivement",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/cvs/{{cvId}}",
               "host": [
@@ -1003,6 +1073,626 @@
           }
         }
       ]
+    },
+    {
+      "name": "4 - Accès (ex. 12 et 14)",
+      "item": [
+        {
+          "name": "Lister sans être connecté (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Non connecté : statut 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer sans être connecté (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dupont\",\n  \"firstname\": \"Sami\",\n  \"age\": 25,\n  \"cin\": \"01234567\",\n  \"job\": \"Développeur\",\n  \"path\": \"cvs/sami.pdf\",\n  \"skillIds\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Non connecté : statut 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier sans être connecté (401)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"job\": \"Pirate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Non connecté : statut 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Le propriétaire crée un cv",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dupont\",\n  \"firstname\": \"Sami\",\n  \"age\": 25,\n  \"cin\": \"01234567\",\n  \"job\": \"Développeur\",\n  \"path\": \"cvs/sami.pdf\",\n  \"skillIds\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Création : statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"accesCvId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Le propriétaire voit son cv dans sa liste",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"const ids = pm.response.json().map(c => c.id);\",\n  \"pm.test(\\\"Mon cv est dans ma liste\\\", () => pm.expect(ids).to.include(pm.collectionVariables.get(\\\"accesCvId\\\")));\",\n  \"pm.collectionVariables.set(\\\"nbCvsProprietaire\\\", ids.length);\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Un autre user ne voit pas ce cv",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"const ids = pm.response.json().map(c => c.id);\",\n  \"pm.test(\\\"Le cv d'un autre n'est pas dans ma liste\\\", () => pm.expect(ids).to.not.include(pm.collectionVariables.get(\\\"accesCvId\\\")));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "L'admin voit tous les cvs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{adminId}}"
+              },
+              {
+                "key": "x-user-role",
+                "value": "admin"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"const ids = pm.response.json().map(c => c.id);\",\n  \"pm.test(\\\"L'admin voit le cv du propriétaire\\\", () => pm.expect(ids).to.include(pm.collectionVariables.get(\\\"accesCvId\\\")));\",\n  \"pm.test(\\\"L'admin voit plus de cvs que le propriétaire\\\", () => pm.expect(ids.length).to.be.above(pm.collectionVariables.get(\\\"nbCvsProprietaire\\\")));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Un autre user modifie ce cv (403)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{accesCvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{accesCvId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"job\": \"Pirate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pas propriétaire : statut 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Message NOT_OWNER\", () => pm.expect(pm.response.json().message).to.eql(\"Vous ne pouvez modifier ou supprimer que vos propres cvs.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Un autre user fait un soft delete (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{accesCvId}}/soft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{accesCvId}}",
+                "soft"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pas propriétaire : statut 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Un autre user supprime ce cv (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{accesCvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{accesCvId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pas propriétaire : statut 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier un cv inexistant (404 avant 403)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "999999"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"job\": \"X\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Introuvable : statut 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Le propriétaire modifie son cv (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{accesCvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{accesCvId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"job\": \"Chef de projet\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Modification : statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Job modifié\", () => pm.expect(pm.response.json().job).to.eql(\"Chef de projet\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usurpation : choisir le propriétaire dans le body",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dupont\",\n  \"firstname\": \"Sami\",\n  \"age\": 25,\n  \"cin\": \"01234567\",\n  \"job\": \"Développeur\",\n  \"path\": \"cvs/sami.pdf\",\n  \"skillIds\": [\n    1,\n    2\n  ],\n  \"user\": {\n    \"id\": 1\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Création : statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"usurpCvId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Le cv usurpé appartient au user connecté",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"pm.test(\\\"Liste : statut 200\\\", () => pm.response.to.have.status(200));\",\n  \"const ids = pm.response.json().map(c => c.id);\",\n  \"pm.test(\\\"whitelist a ignoré body.user : le cv est à moi\\\", () => pm.expect(ids).to.include(pm.collectionVariables.get(\\\"usurpCvId\\\")));\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Nettoyage : supprimer le cv usurpé",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{otherId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{usurpCvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{usurpCvId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Suppression : statut 200 ou 204\", () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Le propriétaire supprime son cv",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{ownerId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs/{{accesCvId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs",
+                "{{accesCvId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Suppression : statut 200 ou 204\", () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -1020,6 +1710,30 @@
     },
     {
       "key": "cvId",
+      "value": ""
+    },
+    {
+      "key": "adminId",
+      "value": "1"
+    },
+    {
+      "key": "ownerId",
+      "value": "2"
+    },
+    {
+      "key": "otherId",
+      "value": "3"
+    },
+    {
+      "key": "accesCvId",
+      "value": ""
+    },
+    {
+      "key": "usurpCvId",
+      "value": ""
+    },
+    {
+      "key": "nbCvsProprietaire",
       "value": ""
     }
   ]
