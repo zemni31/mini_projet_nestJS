@@ -7,18 +7,23 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards, // ← NOUVEAU
 } from '@nestjs/common';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator'; // ← NOUVEAU
+import type { ConnectedUser } from '../common/interfaces/connected-user.interface'; // ← NOUVEAU
+import { FakeAuthGuard } from '../common/guards/fake-auth.guard'; // ← NOUVEAU (TEMPORAIRE → JwtAuthGuard du lot 4)
 
 @Controller('cvs')
 export class CvController {
   constructor(private readonly cvService: CvService) { }
 
   @Post()
-  create(@Body() dto: CreateCvDto) {
-    return this.cvService.createCv(dto);
+  @UseGuards(FakeAuthGuard)
+  create(@Body() dto: CreateCvDto, @CurrentUser() user: ConnectedUser) {
+    return this.cvService.createCv(dto, user);
   }
 
   @Get()
@@ -32,22 +37,30 @@ export class CvController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCvDto) {
-    return this.cvService.updateCv(id, dto);
+  @UseGuards(FakeAuthGuard)
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCvDto,
+    @CurrentUser() user: ConnectedUser,
+  ) {
+    return this.cvService.updateCv(id, dto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.cvService.remove(id);
+  @UseGuards(FakeAuthGuard)
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: ConnectedUser) {
+    return this.cvService.removeCv(id, user);
   }
 
   @Delete(':id/soft')
-  softDelete(@Param('id', ParseIntPipe) id: number) {
-    return this.cvService.softDelete(id);
+  @UseGuards(FakeAuthGuard)
+  softDelete(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: ConnectedUser) {
+    return this.cvService.softDeleteCv(id, user);
   }
 
   @Patch(':id/restore')
-  restore(@Param('id', ParseIntPipe) id: number) {
-    return this.cvService.restore(id);
+  @UseGuards(FakeAuthGuard)
+  restore(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: ConnectedUser) {
+    return this.cvService.restoreCv(id, user);
   }
 }
