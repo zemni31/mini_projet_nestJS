@@ -23,4 +23,6 @@ export class TodoEntity extends TimestampedEntity{
     default: StatusEnum.TODO,
   })
   status: StatusEnum;
+  @Column({ type: 'int' })
+   userId: number;
 }

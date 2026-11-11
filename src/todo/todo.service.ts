@@ -15,16 +15,25 @@ export class TodoService {
   ) {}
 
   // Version 1 : avec le repository (méthode usuelle)
-  async addTodo(dto: CreateTodoDto): Promise<TodoEntity> {
-    const todo = this.todoRepository.create(dto);
-    return this.todoRepository.save(todo);
-  }
+  async addTodo(dto: CreateTodoDto, userId: number) {
+  // On étale les champs de dto (name, description, etc.) et on ajoute userId
+  const newTodo = this.todoRepository.create({
+    ...dto,
+    userId,
+  });
 
-  // Version 2 : avec l'EntityManager du DataSource
-  async addTodoV2(dto: CreateTodoDto): Promise<TodoEntity> {
-    const todo = this.dataSource.manager.create(TodoEntity, dto);
-    return this.dataSource.manager.save(todo);
-  }
+  return await this.todoRepository.save(newTodo);
+}
+
+async addTodoV2(dto: CreateTodoDto, userId: number) {
+  const newTodo = this.todoRepository.create({
+    ...dto,
+    userId,
+  });
+
+  return await this.todoRepository.save(newTodo);
+}
+
   async updateTodo(id: number, dto: UpdateTodoDto): Promise<TodoEntity> {
     const todo = await this.todoRepository.findOneBy({ id });
     if (!todo) {
