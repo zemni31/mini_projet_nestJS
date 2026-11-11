@@ -6,6 +6,7 @@ import { TestModule } from './test/test.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TodoModule } from './todo/todo.module';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [CommonModule, TestModule,
     ConfigModule.forRoot({ isGlobal: true }),
@@ -24,6 +25,7 @@ import { TodoModule } from './todo/todo.module';
       }),
     }),
     TodoModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

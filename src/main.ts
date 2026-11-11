@@ -6,7 +6,7 @@ async function bootstrap() {
    app.enableVersioning({
     type: VersioningType.URI,
   });
-   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+   app.useGlobalPipes(new ValidationPipe({ whitelist: true, stopAtFirstError: true }));
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();
