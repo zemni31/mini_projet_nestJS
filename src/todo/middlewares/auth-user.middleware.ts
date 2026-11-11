@@ -32,7 +32,7 @@ export class AuthUserMiddleware implements NestMiddleware {
       next();
     } catch (error  : any) {
       // Si le token est corrompu ou expiré
-      throw new UnauthorizedException(`Accès refusé : Token invalide ou expiré ');
+      throw new UnauthorizedException('Accès refusé : Token invalide ou expiré ');
 
   }
-}
+}}
