@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CvEntity } from '../../cv/entities/cv.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -16,4 +17,7 @@ export class UserEntity {
 
   @Column({ default: 'user' })
   role: string;
+
+  @OneToMany(() => CvEntity, (cv) => cv.user)
+  cvs: CvEntity[];
 }

@@ -6,7 +6,10 @@ import { TestModule } from './test/test.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TodoModule } from './todo/todo.module';
+import { SkillModule } from './skill/skill.module';
+import { CvModule } from './cv/cv.module';
 import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [CommonModule, TestModule,
     ConfigModule.forRoot({ isGlobal: true }),
@@ -22,13 +25,19 @@ import { AuthModule } from './auth/auth.module';
         database: config.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
+        ssl:
+          config.get<string>('DB_SSL') === 'true'
+            ? { rejectUnauthorized: false }
+            : false,
       }),
     }),
     TodoModule,
+    SkillModule,
+    CvModule,
     AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
-  exports:[],
+  exports: [],
 })
-export class   AppModule {}
+export class AppModule { }
