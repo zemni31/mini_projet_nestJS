@@ -1,12 +1,12 @@
 {
   "info": {
     "name": "TP2 NestJS - Cvs, Skills, Auth",
-    "description": "Lot 5 : jeu de tests de toutes les routes. Lancer `npm run seed:cvs` puis `npm run start:dev` avant d'exécuter la collection (skills 1, 2, 3 et users 1 = admin, 2, 3 du seed). En attendant le lot 4, l'authentification est simulée par le FakeAuthGuard : header x-user-id (et x-user-role: admin pour l'admin).",
+    "description": "Lot 5 : jeu de tests de toutes les routes. Lancer `npm run seed:cvs` puis `npm run start:dev` avant d'exécuter la collection (skills 1, 2, 3 et admin/Admin123! du seed). Authentification réelle : login -> JWT -> header Authorization: Bearer.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "1 - Auth (inscription)",
+      "name": "1 - Auth (inscription + login JWT)",
       "item": [
         {
           "name": "Inscription OK",
@@ -228,6 +228,278 @@
                 "exec": [
                   "pm.test(\"Inscription : statut 201\", () => pm.response.to.have.status(201));",
                   "pm.test(\"Le champ role est retiré par whitelist : rôle = user\", () => pm.expect(pm.response.json().role).to.eql(\"user\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscription d'un deuxième user (autre)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/inscription",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "inscription"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"email\": \"{{otherUsername}}@test.tn\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"otherUsername\", \"autre\" + Date.now().toString().slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inscription : statut 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login propriétaire (token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login : statut 201\", () => pm.response.to.have.status(201));",
+                  "const t = pm.response.json().access_token;",
+                  "pm.test(\"Un JWT est renvoyé (3 parties séparées par des points)\", () => pm.expect(t.split(\".\")).to.have.lengthOf(3));",
+                  "pm.collectionVariables.set(\"tokenOwner\", t);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login autre user (token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login : statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"tokenOther\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin du seed (token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login : statut 201\", () => pm.response.to.have.status(201));",
+                  "const t = pm.response.json().access_token;",
+                  "const p = JSON.parse(atob(t.split(\".\")[1].replace(/-/g, \"+\").replace(/_/g, \"/\")));",
+                  "pm.test(\"Le payload contient userId, username et role (contrat)\", () => pm.expect(p).to.include.all.keys(\"userId\", \"username\", \"role\"));",
+                  "pm.test(\"Le rôle dans le token est admin\", () => pm.expect(p.role).to.eql(\"admin\"));",
+                  "pm.test(\"Le token expire (exp présent)\", () => pm.expect(p.exp).to.be.a(\"number\"));",
+                  "pm.test(\"Le mot de passe n'est pas dans le token\", () => pm.expect(p).to.not.have.property(\"password\"));",
+                  "pm.collectionVariables.set(\"tokenAdmin\", t);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login mauvais mot de passe (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"mauvais\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Identifiants invalides : statut 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login user inexistant (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"personne_xyz\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Identifiants invalides : statut 401\", () => pm.response.to.have.status(401));"
                 ]
               }
             }
@@ -586,8 +858,8 @@
             "method": "POST",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -635,8 +907,8 @@
             "method": "POST",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -680,8 +952,8 @@
             "method": "POST",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -725,8 +997,8 @@
             "method": "POST",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -770,8 +1042,8 @@
             "method": "GET",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -897,8 +1169,8 @@
             "method": "PATCH",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -946,8 +1218,8 @@
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               }
             ],
             "url": {
@@ -980,8 +1252,8 @@
             "method": "PATCH",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               }
             ],
             "url": {
@@ -1014,8 +1286,8 @@
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               }
             ],
             "url": {
@@ -1188,13 +1460,89 @@
           ]
         },
         {
+          "name": "Token invalide (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Signature invalide : statut 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token modifié à la main : role admin (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenFalsifie}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cvs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cvs"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// on remplace le payload du token du propriétaire par un payload role=admin, sans re-signer",
+                  "const [h, , sig] = pm.collectionVariables.get(\"tokenOwner\").split(\".\");",
+                  "const faux = btoa(JSON.stringify({ userId: 1, username: \"admin\", role: \"admin\" })).replace(/=/g, \"\").replace(/\\+/g, \"-\").replace(/\\//g, \"_\");",
+                  "pm.collectionVariables.set(\"tokenFalsifie\", h + \".\" + faux + \".\" + sig);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Signature ne correspond plus : statut 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Le propriétaire crée un cv",
           "request": {
             "method": "POST",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -1239,8 +1587,8 @@
             "method": "GET",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -1273,8 +1621,8 @@
             "method": "GET",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               },
               {
                 "key": "Content-Type",
@@ -1307,12 +1655,8 @@
             "method": "GET",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{adminId}}"
-              },
-              {
-                "key": "x-user-role",
-                "value": "admin"
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
               },
               {
                 "key": "Content-Type",
@@ -1345,8 +1689,8 @@
             "method": "PATCH",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               },
               {
                 "key": "Content-Type",
@@ -1392,8 +1736,8 @@
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               }
             ],
             "url": {
@@ -1426,8 +1770,8 @@
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               }
             ],
             "url": {
@@ -1459,8 +1803,8 @@
             "method": "PATCH",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               },
               {
                 "key": "Content-Type",
@@ -1505,8 +1849,8 @@
             "method": "PATCH",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               },
               {
                 "key": "Content-Type",
@@ -1552,8 +1896,8 @@
             "method": "POST",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               },
               {
                 "key": "Content-Type",
@@ -1598,8 +1942,8 @@
             "method": "GET",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               },
               {
                 "key": "Content-Type",
@@ -1632,8 +1976,8 @@
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{otherId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOther}}"
               }
             ],
             "url": {
@@ -1665,8 +2009,8 @@
             "method": "DELETE",
             "header": [
               {
-                "key": "x-user-id",
-                "value": "{{ownerId}}"
+                "key": "Authorization",
+                "value": "Bearer {{tokenOwner}}"
               }
             ],
             "url": {
@@ -1698,7 +2042,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000"
+      "value": "http://localhost:3000/api"
     },
     {
       "key": "username",
@@ -1713,16 +2057,24 @@
       "value": ""
     },
     {
-      "key": "adminId",
-      "value": "1"
+      "key": "otherUsername",
+      "value": ""
     },
     {
-      "key": "ownerId",
-      "value": "2"
+      "key": "tokenOwner",
+      "value": ""
     },
     {
-      "key": "otherId",
-      "value": "3"
+      "key": "tokenOther",
+      "value": ""
+    },
+    {
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "tokenFalsifie",
+      "value": ""
     },
     {
       "key": "accesCvId",
