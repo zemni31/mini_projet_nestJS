@@ -1,6 +1,7 @@
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
 import { SkillEntity } from '../../skill/entities/SkillEntity';
+import { UserEntity } from '../../auth/entities/user.entity';
 
 @Entity('cvs')
 export class CvEntity extends AbstractEntity {
@@ -25,4 +26,8 @@ export class CvEntity extends AbstractEntity {
     @ManyToMany(() => SkillEntity, (skill) => skill.cvs) // Un Cv a plusieurs compétences et une compétence appartient à plusieurs Cvs
     @JoinTable({ name: 'cv_skills' })
     skills: SkillEntity[];
+
+    // Un Cv appartient à un seul User (propriétaire) ; un User peut avoir plusieurs Cvs
+    @ManyToOne(() => UserEntity, (user) => user.cvs, { nullable: true })
+    user: UserEntity | null;
 }
