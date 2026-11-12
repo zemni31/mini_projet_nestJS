@@ -15,7 +15,7 @@ export class UserEntity {
   @Column({ unique: true })
   email: string;
 
-  @Column({ default: 'user' })
+  @Column({ type: 'varchar',default: 'user' })
   role: string;
 
   @OneToMany(() => CvEntity, (cv) => cv.user)
