@@ -25,14 +25,19 @@ export class TodoService {
   return await this.todoRepository.save(newTodo);
 }
 
-async addTodoV2(dto: CreateTodoDto, userId: number) {
-  const newTodo = this.todoRepository.create({
-    ...dto,
-    userId,
-  });
+// Version 2 : Avec QueryBuilder (via DataSource)
+  async addTodoV2(dto: CreateTodoDto, userId: number) {
+    return await this.dataSource
+      .createQueryBuilder()
+      .insert()
+      .into(TodoEntity)
+      .values({
+        ...dto,
+        userId,
+      })
+      .execute();
+  }
 
-  return await this.todoRepository.save(newTodo);
-}
 
   async updateTodo(id: number, dto: UpdateTodoDto): Promise<TodoEntity> {
     const todo = await this.todoRepository.findOneBy({ id });
