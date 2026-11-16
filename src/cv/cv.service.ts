@@ -108,4 +108,11 @@ export class CvService extends CrudService<CvEntity> {
     await this.assertOwner(id, user, true);
     return this.restore(id);
   }
+    // Exercice 14 : l'admin voit n'importe quel Cv, un utilisateur seulement les siens
+  async findOneForUser(id: number, user: ConnectedUser): Promise<CvEntity> {
+    if (user.role !== ADMIN_ROLE) {
+      await this.assertOwner(id, user);
+    }
+    return this.findOne(id);
+  }
 }
