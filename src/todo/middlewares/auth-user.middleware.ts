@@ -20,7 +20,7 @@ export class AuthUserMiddleware implements NestMiddleware {
       const decoded = verify(token, secretKey) as { userId: number | string; username?: string; role?: string };
       // 3. Vérification de la présence de la propriété userId
       if (!decoded || !decoded.userId) {
-        return res.status(403).json({ 
+        return res.status(401).json({ 
           message: 'Accès refusé : Le token ne contient pas de userId' 
         });
       }
