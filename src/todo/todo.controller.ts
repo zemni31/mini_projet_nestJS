@@ -6,10 +6,9 @@ import {  Body,
   Post,
   Version, 
 Delete,
-Get,Query,ParseEnumPipe,Req, 
-  UnauthorizedException, 
+Get,Query,ParseEnumPipe,Req,  
   NotFoundException, 
-  UseGuards} from '@nestjs/common';
+  UseGuards ,ForbiddenException} from '@nestjs/common';
 import { TodoService } from './todo.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
@@ -51,7 +50,7 @@ export class TodoController {
 
     // 2. Vérification de la propriété
     if (todo.userId !== currentUserId) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Seul le créateur de ce Todo est autorisé à le modifier',
       );
     }
@@ -71,7 +70,7 @@ export class TodoController {
     }
 
     if (todo.userId !== currentUserId) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Seul le créateur de ce Todo est autorisé à le restaurer',
       );
     }
@@ -91,7 +90,7 @@ export class TodoController {
     }
 
     if (todo.userId !== currentUserId) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Seul le créateur de ce Todo est autorisé à le supprimer',
       );
     }
@@ -111,7 +110,7 @@ export class TodoController {
     }
 
     if (todo.userId !== currentUserId) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Seul le créateur de ce Todo est autorisé à le supprimer',
       );
     }
